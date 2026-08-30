@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Barra Space Center</title>
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body class="login-bg">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-logo">
+                <img src="http://www.barraspace.com.br/wp-content/uploads/2016/12/LogoMarcaTransp80.jpg" alt="Logo Barra Space Center">
+            </div>
+            <h2>Área Restrita</h2>
+            <p>Faça login para acessar o painel</p>
+            <form action="autenticar.php" method="POST">
+                <div class="form-group">
+                    <label for="perfil">Perfil de Acesso</label>
+                    <select id="perfil" name="perfil">
+                        <option value="admin">Administração / Gerência</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="email">E-mail ou CPF</label>
+                    <input type="text" id="email" name="email" required placeholder="Digite seu e-mail ou CPF">
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" name="senha" required placeholder="Digite sua senha">
+                </div>
+                <button type="submit" class="btn-login-submit">Entrar no Sistema</button>
+                <div class="login-links">
+                    <a href="#">Esqueci minha senha</a>
+                    <a href="index.html">← Voltar ao Site</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

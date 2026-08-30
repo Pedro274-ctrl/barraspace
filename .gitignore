@@ -1,0 +1,16 @@
+# Senhas e dados locais
+conexao.php
+.env
+setup.php
+info.php
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Dependências futuras
+/vendor/
+/node_modules/
+
+# Logs
+*.log
