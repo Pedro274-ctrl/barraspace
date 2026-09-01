@@ -1,3 +1,10 @@
+<?php
+require_once 'conexao.php';
+// Busca os condôminos no banco de dados em ordem alfabética pela empresa (apenas ativos)
+$stmt = $pdo->query("SELECT * FROM condominos WHERE ativo = 1 ORDER BY razao_social ASC");
+$lista_condominos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -21,6 +28,7 @@
                     <li><a href="#home">Início</a></li>
                     <li><a href="#sobre">Sobre</a></li>
                     <li><a href="#convencoes">Centro de Convenções</a></li>
+                    <li><a href="#condominos">Condôminos</a></li> <!-- Nova Aba -->
                     <li><a href="#contato">Contato</a></li>
                     <li><a href="login.html" class="btn-painel-discreto">🔒 Painel</a></li>
                 </ul>
@@ -103,6 +111,81 @@
         </div>
     </section>
 
+    <!-- Seção Condôminos -->
+<section id="condominos" class="section bg-light">
+    <div class="container">
+        <h2 class="section-title text-center" style="color: #b8860b; text-transform: uppercase;">Condôminos</h2>
+        
+        <div class="filtros-condominos text-center">
+            <label><input type="radio" name="filtro" checked> Alfabética</label>
+            <label><input type="radio" name="filtro"> Andares</label>
+        </div>
+
+        <div class="grid-condominos">
+            <?php foreach ($lista_condominos as $condomino): ?>
+                <div class="condomino-box" style="margin-bottom: 25px;">
+                    <!-- Nome da Empresa (Razão Social) -->
+                    <h4 class="cond-nome" style="color: #b8860b; font-size: 1.1rem; margin-bottom: 2px;">
+                        <?= htmlspecialchars($condomino['razao_social']) ?>
+                    </h4>
+                    
+                    <!-- Salas -->
+                    <?php if ($condomino['chk_salas'] == 1 && !empty($condomino['salas'])): ?>
+                        <p class="cond-detalhe" style="color: #c49a45; font-size: 0.9rem; margin-bottom: 2px;">
+                            <?= htmlspecialchars($condomino['salas']) ?>
+                        </p>
+                    <?php else: ?>
+                        <p class="cond-detalhe" style="color: #c49a45; font-size: 0.9rem; margin-bottom: 2px;">
+                            Sala <?= htmlspecialchars($condomino['sala_principal']) ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <!-- Responsável -->
+                    <?php if ($condomino['chk_responsavel'] == 1 && !empty($condomino['responsavel'])): ?>
+                        <p class="cond-detalhe" style="color: #c49a45; font-size: 0.9rem; margin-bottom: 2px;">
+                            <strong>Responsável:</strong> <?= htmlspecialchars($condomino['responsavel']) ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <!-- Especialidades -->
+                    <?php if ($condomino['chk_especialidades'] == 1 && !empty($condomino['especialidades'])): ?>
+                        <p class="cond-detalhe" style="color: #c49a45; font-size: 0.9rem; margin-bottom: 2px;">
+                            <strong>Especialidade:</strong> <?= htmlspecialchars($condomino['especialidades']) ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <!-- Telefones -->
+                    <?php if ($condomino['chk_telefones'] == 1 && !empty($condomino['telefones'])): ?>
+                        <p class="cond-detalhe" style="color: #c49a45; font-size: 0.9rem; margin-bottom: 2px;">
+                            📞 <?= htmlspecialchars($condomino['telefones']) ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <!-- Email -->
+                    <?php if ($condomino['chk_email'] == 1 && !empty($condomino['email'])): ?>
+                        <p class="cond-detalhe" style="color: #c49a45; font-size: 0.9rem; margin-bottom: 2px;">
+                            ✉ <?= htmlspecialchars($condomino['email']) ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <!-- Site (URL) -->
+                    <?php if ($condomino['chk_url'] == 1 && !empty($condomino['url'])): ?>
+                        <p class="cond-detalhe" style="color: #c49a45; font-size: 0.9rem; margin-bottom: 2px;">
+                            <a href="http://<?= htmlspecialchars($condomino['url']) ?>" target="_blank" style="color: #c49a45; text-decoration: none;">
+                                <?= htmlspecialchars($condomino['url']) ?>
+                            </a>
+                        </p>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+            
+            <?php if (count($lista_condominos) === 0): ?>
+                <p style="text-align: center; width: 100%;">Nenhum condômino disponível no momento.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
+
     <!-- Contato e Mapa -->
     <section id="contato" class="section">
         <div class="container">
@@ -159,9 +242,9 @@
                     
                     <!-- Mapa Embutido do Google -->
                     <div class="mapa">
-                        <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3673.061033621415!2d-43.3235316844865!3d-23.003189984962634!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9bd0a7bc014023%3A0xc66512b8b9dcde99!2sAv.%20das%20Am%C3%A9ricas%2C%201155%20-%20Barra%20da%20Tijuca%2C%20Rio%20de%20Janeiro%20-%20RJ%2C%2022631-000!5e0!3m2!1spt-BR!2sbr!4v1680000000000!5m2!1spt-BR!2sbr" 
-                            width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3673.061033621415!2d-43.3235316844865!3d-23.003189984962634!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9bd0a7bc014023%3A0xc66512b8b9dcde99!2sAv.%20das%20Am%C3%A9ricas%2C%201155%20-%20Barra%20da%20Tijuca%2C%20Rio%20de%20Janeiro%20-%20RJ%2C%2022631-000!5e0!3m2!1spt-BR!2sbr!4v1680000000000!5m2!1spt-BR!2sbr"
+                            width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa da localização do Barra Space Center">
                         </iframe>
                     </div>
                 </div>

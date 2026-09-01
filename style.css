@@ -257,3 +257,35 @@ footer {
     .hero h1 { font-size: 2.5rem; }
     .hero h2 { font-size: 1.5rem; }
 }
+
+/* Estilos da Seção Condôminos */
+.filtros-condominos {
+    margin-bottom: 40px;
+    color: #b8860b; /* Dourado da imagem */
+    font-size: 0.9rem;
+}
+.filtros-condominos label {
+    margin: 0 10px;
+    cursor: pointer;
+}
+.grid-condominos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 30px;
+    text-align: left;
+}
+.condomino-box {
+    margin-bottom: 10px;
+}
+.cond-nome {
+    color: #b8860b;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.cond-detalhe {
+    color: #c49a45;
+    font-size: 0.85rem;
+    margin-bottom: 3px;
+    line-height: 1.3;
+}
