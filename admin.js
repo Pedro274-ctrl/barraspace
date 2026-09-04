@@ -37,3 +37,35 @@ function excluir() {
         alert("Cadastro removido (Simulação).");
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Lógica de Troca de Abas (Dashboard vs Gestão)
+    const menuLinks = document.querySelectorAll('.menu-link');
+    const viewSections = document.querySelectorAll('.view-section');
+
+    menuLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const targetId = link.getAttribute('data-target');
+            
+            if (targetId) {
+                e.preventDefault(); // Evita o recarregamento da página
+
+                // 1. Remove classe 'active' de todos os menus e adiciona no clicado
+                menuLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                // 2. Oculta todas as seções e exibe apenas a correspondente
+                viewSections.forEach(section => {
+                    section.classList.add('hidden');
+                });
+                
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.remove('hidden');
+                }
+            }
+        });
+    });
+
+    // Manter o restante do seu código JS (Sidebar toggle mobile, etc.) abaixo desta linha...
+});
