@@ -1,7 +1,7 @@
 /**
  * BARRA SPACE CENTER - SCRIPT - VERSÃO ZERO ERRO
  * Correção cirúrgica dos 3 bugs críticos + performance + segurança
- * Senior 16+ - Auditoria Fase 2
+ * Auditoria Fase 2
  */
 document.addEventListener('DOMContentLoaded', () => {
   const $ = s => document.querySelector(s);
@@ -275,6 +275,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!nome || !email || !mensagem) {
       feedback.textContent = 'Preencha todos os campos obrigatórios.';
+      feedback.style.color = '#b91c1c';
+      return;
+    }
+
+    if (!formData.get('consentimento')) {
+      feedback.textContent = 'Confirme sua concordância com o uso dos dados pessoais para enviar a mensagem.';
       feedback.style.color = '#b91c1c';
       return;
     }

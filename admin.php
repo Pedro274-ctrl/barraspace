@@ -1,11 +1,13 @@
 <?php
-session_start();
-if (!isset($_SESSION['logado'])) {
-    header("Location: login.html");
-    exit;
-}
+require_once __DIR__ . '/auth.php';
+require_privileged_admin();
 
 require_once 'conexao.php';
+
+$user_name = trim($_SESSION['nome'] ?? '') ?: $_SESSION['email'];
+$user_name_esc = htmlspecialchars($user_name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+$user_initial = htmlspecialchars(strtoupper(substr($user_name, 0, 1)), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+$user_role = $_SESSION['perfil'] === 'operador' ? 'Operador' : 'Gerente';
 
 // Filtros
 $busca = filter_input(INPUT_GET, 'busca', FILTER_SANITIZE_STRING);
@@ -107,10 +109,10 @@ if ($exportar === 'excel') {
                 <!-- Usuário e Botão de Sair Movidos para o Canto Superior Direito -->
                 <div class="user-actions">
                     <div class="user-info">
-                        <div class="avatar">A</div>
+                        <div class="avatar"><?= $user_initial ?></div>
                         <div class="user-details">
-                            <span class="greeting">Olá, <strong>Administração</strong></span>
-                            <span class="role">Gerente</span>
+                            <span class="greeting">Olá, <strong><?= $user_name_esc ?></strong></span>
+                            <span class="role"><?= $user_role ?></span>
                         </div>
                     </div>
                     <a href="logout.php" class="btn-logout-header" title="Sair do Sistema">
@@ -171,7 +173,7 @@ if ($exportar === 'excel') {
 
                                 <div class="input-group search-group">
                                     <i class="fas fa-search search-icon"></i>
-                                    <input id="busca" type="text" name="busca" class="lux-input search-input" placeholder="Buscar sala, empresa, CNPJ..." value="<?= htmlspecialchars($busca ?? '') ?>">
+                                    <input id="busca" type="text" name="busca" class="lux-input search-input" placeholder="Buscar sala, empresa..." value="<?= htmlspecialchars($busca ?? '') ?>">
                                 </div>
                                 
                                 <button type="submit" class="btn lux-btn-primary">Filtrar</button>

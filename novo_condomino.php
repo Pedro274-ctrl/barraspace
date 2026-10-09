@@ -1,9 +1,6 @@
 <?php
-session_start();
-if (!isset($_SESSION['logado'])) {
-    header("Location: login.html");
-    exit;
-}
+require_once __DIR__ . '/auth.php';
+require_privileged_admin();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -153,4 +150,3 @@ if (!isset($_SESSION['logado'])) {
     </div>
 </body>
 </html>
-

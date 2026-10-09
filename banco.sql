@@ -7,9 +7,8 @@ CREATE TABLE IF NOT EXISTS gerencia (
   senha VARCHAR(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Tabela recriada com as 19 colunas mapeadas do arquivo CSV e do painel
-DROP TABLE IF EXISTS condominos;
-CREATE TABLE condominos (
+-- Esquema inicial: IF NOT EXISTS preserva tabelas e registros existentes.
+CREATE TABLE IF NOT EXISTS condominos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ativo TINYINT(1) DEFAULT 1,
   razao_social VARCHAR(150) NOT NULL,
@@ -30,4 +29,10 @@ CREATE TABLE condominos (
   url VARCHAR(150),
   chk_url TINYINT(1) DEFAULT 1,
   status ENUM('Adimplente', 'Pendente') DEFAULT 'Adimplente'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version VARCHAR(32) PRIMARY KEY,
+  description VARCHAR(255) NOT NULL,
+  applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -386,9 +386,19 @@ body {
 .lux-btn-primary:hover { background: var(--primary-dark); box-shadow: 0 4px 10px rgba(22, 64, 139, 0.3); }
 .lux-btn-danger { background: #fff; color: #e74c3c; border: 1px solid #e74c3c; }
 .lux-btn-danger:hover { background: #e74c3c; color: #fff; }
-.lux-btn-success { background: #2ecc71; color: #fff; margin-left: auto; }
-.lux-btn-success:hover { background: #27ae60; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); }
+.lux-btn-success { 
+    background: #2ecc71; 
+    color: #fff; 
+    margin-left: auto; 
+    padding: 12px 6px;      /* Reduz a altura e largura interna */
+    font-size: 0.85rem;     /* Ajuste fino no tamanho do texto */
+    letter-spacing: 0.3px;  /* Mantém a leitura sofisticada */
+}
 
+.lux-btn-success:hover { 
+    background: #27ae60; 
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); 
+}
 /* Botão Excel Estilizado */
 .lux-btn-excel { background: #217346; color: white; border: 1px solid #1e6b41; }
 .lux-btn-excel:hover { background: #1a5c38; box-shadow: 0 4px 10px rgba(33, 115, 70, 0.3); transform: translateY(-2px); }
@@ -437,19 +447,59 @@ body {
 .empty-state { text-align: center; padding: 40px !important; color: var(--text-muted); }
 .empty-state i { font-size: 3rem; color: #dce1e7; margin-bottom: 15px; display: block; }
 
-/* Responsividade Aprimorada */
+/* Responsividade Aprimorada - Barra Space */
+@media (max-width: 1200px) {
+    /* Reduz suavemente a barra de pesquisa antes do ponto de quebra principal */
+    .search-input { width: 240px; } 
+}
+
 @media (max-width: 1024px) {
+    /* Flexibiliza a barra de pesquisa sem quebrar a harmonia dos botões de ação */
+    .input-group { flex-grow: 1; }
     .search-input { width: 100%; }
-    .lux-btn-success { margin-left: 0; width: 100%; justify-content: center; }
+    
+    /* Correção Cirúrgica: Restaura o botão "+ Novo Cadastro" para o tamanho natural */
+    .lux-btn-success {
+        margin-left: auto;
+        width: auto;
+    }
+}
+
+@media (max-width: 860px) {
+    /* Ponto de segurança: garante alinhamento direito caso a quebra de linha (wrap) ocorra */
+    .filter-form { justify-content: space-between; }
+    .lux-btn-success { margin-left: auto; }
 }
 
 @media (max-width: 768px) {
+    /* Mantém as regras da Sidebar e Layout original do mobile */
     .sidebar { position: fixed; height: 100vh; transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
     .main-content { width: 100%; }
     .admin-header { padding: 0 15px; }
     .user-details { display: none; }
     .dashboard-content { padding: 20px; }
+
+    /* Reestruturação Total em Coluna para UX Mobile */
+    .filter-form { 
+        flex-direction: column; 
+        align-items: stretch; 
+        gap: 12px; 
+    }
+    .input-group, .search-input, .lux-input { width: 100%; }
+    
+    /* Oculta o divisor vertical, inútil em layout de coluna */
+    .divider { display: none; }
+    
+    /* Padroniza área de touch (Touch Targets) para mobile */
+    .btn { 
+        width: 100%; 
+        justify-content: center; 
+    }
+    .lux-btn-success { 
+        margin-left: 0; 
+        margin-top: 5px; 
+    }
 }
 /* Controle de Visibilidade das Abas (SPA Feel) */
 .view-section { animation: fadeIn 0.5s ease-in-out forwards; }

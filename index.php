@@ -1,8 +1,7 @@
 <?php
 /**
- * BARRA SPACE CENTER - INDEX - VERSÃO ZERO ERRO
- * Refatoração Cirúrgica: Galeria Centro de Convenções (Luxo & Interação)
- * Senior 16+ anos - Auditoria Fase 4 aplicada
+ * BARRA SPACE CENTER - INDEX 
+ * Refatoração Cirúrgica: Galeria Centro de Convenções 
  */
 
 require_once __DIR__ . '/conexao.php';
@@ -220,7 +219,7 @@ $ano_atual = date('Y');
                 </div>
                 <div class="about-image reveal">
                     <div class="image-frame">
-                        <img src="<?= asset_https('http://www.barraspace.com.br/wp-content/uploads/2016/12/PredioTransp1200.jpg') ?>" alt="Fachada Barra Space Center" loading="lazy">
+                        <img src="<?= asset_https('https://draglauciamoraes.com.br/wp-content/uploads/2020/01/11-3.jpg') ?>" alt="Fachada Barra Space Center" loading="lazy">
                     </div>
                 </div>
             </div>
@@ -587,12 +586,18 @@ $ano_atual = date('Y');
                     <form id="formContato" method="POST" novalidate>
                         <input type="text" name="website" style="display:none !important" tabindex="-1" autocomplete="off">
                         <div class="form-group"><input type="text" id="nome" name="nome" required placeholder=" " autocomplete="name"><label for="nome">Nome completo *</label></div>
-                        <div class="form-group"><input type="email" id="email" name="email" required placeholder=" " autocomplete="email"><label for="email">Seu melhor e-mail *</label></div>
+                        <div class="form-group"><input type="email" id="email" name="email" required placeholder=" " autocomplete="email"><label for="email">Seu e-mail *</label></div>
                         <div class="form-row">
                             <div class="form-group"><input type="text" id="assunto" name="assunto" required placeholder=" "><label for="assunto">Assunto *</label></div>
                             <div class="form-group"><select id="categoria" name="categoria" required><option value="" disabled selected></option><option value="informacoes">Informações</option><option value="sugestoes">Sugestões</option><option value="reclamacoes">Reclamações</option></select><label for="categoria">Categoria *</label></div>
                         </div>
                         <div class="form-group"><textarea id="mensagem" name="mensagem" rows="5" required placeholder=" "></textarea><label for="mensagem">Sua mensagem *</label></div>
+                        <div class="form-consent">
+                            <label for="consentimento">
+                                <input type="checkbox" id="consentimento" name="consentimento" required>
+                                <span>Concordo com o uso dos meus dados pessoais para que a Barra Space responda à minha mensagem, conforme a LGPD.</span>
+                            </label>
+                        </div>
                         <button type="submit" class="btn-primary full magnetic">Enviar Mensagem</button>
                         <p id="form-feedback" role="alert" aria-live="polite"></p>
                     </form>
