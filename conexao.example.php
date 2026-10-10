@@ -26,8 +26,7 @@ $respondUnavailable = static function (): void {
         return;
     }
 
-    header('Content-Type: text/html; charset=UTF-8');
-    echo '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Barra Space - Manutenção</title><style>body{font-family:sans-serif;background:#0A1020;color:#FCFAF7;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}.box{text-align:center;padding:24px}</style></head><body><div class="box"><h1>Barra Space Center</h1><p>Serviço temporariamente indisponível. Tente novamente em instantes.</p></div></body></html>';
+    require __DIR__ . '/503.php';
 };
 
 $missingCredentials = [];

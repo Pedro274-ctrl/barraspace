@@ -257,15 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
   form?.addEventListener('submit', e => {
     e.preventDefault();
     
-    // Honeypot anti-spam [S3]
-    const honeypot = form.querySelector('input[name="website"]');
-    if (honeypot && honeypot.value !== '') {
-      // Bot detectado, finge sucesso mas não envia
-      showToast('Mensagem enviada com sucesso!');
-      form.reset();
-      return;
-    }
-
     if (!feedback) return;
     
     const formData = new FormData(form);
@@ -287,14 +278,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     feedback.textContent = 'Enviando...';
     feedback.style.color = 'var(--gold)';
-    
-    // Aqui entraria fetch('/enviar-contato.php') real
-    // Por enquanto simula com segurança
-    setTimeout(() => {
-      feedback.textContent = 'Mensagem enviada com sucesso! Retornaremos em breve.';
-      feedback.style.color = 'green';
-      form.reset();
-      showToast('Mensagem enviada com sucesso!');
-    }, 800);
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(async response => {
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.erro || 'Não foi possível enviar sua mensagem.');
+        }
+        return result;
+      })
+      .then(result => {
+        feedback.textContent = result.mensagem || 'Mensagem enviada com sucesso! Retornaremos em breve.';
+        feedback.style.color = 'green';
+        form.reset();
+        showToast(feedback.textContent);
+      })
+      .catch(error => {
+        feedback.textContent = error.message || 'Não foi possível enviar sua mensagem. Tente novamente.';
+        feedback.style.color = '#b91c1c';
+      })
+      .finally(() => {
+        if (submitButton) submitButton.disabled = false;
+      });
   });
 });

@@ -43,7 +43,11 @@ cp conexao.example.php conexao.php
 | `DB_USER` | Sim | — | Usuário do banco |
 | `DB_PASS` | Sim | — | Senha do usuário do banco |
 
-`DB_USER` e `DB_PASS` não têm valores padrão. Se estiverem ausentes ou vazias, o site responde com HTTP 503 e registra a configuração ausente no log do PHP. Erros de conexão também são registrados no log, sem exibir detalhes técnicos aos visitantes.
+`DB_USER` e `DB_PASS` não têm valores padrão. Se estiverem ausentes ou vazias, o site responde com HTTP 503 e registra a configuração ausente no log do PHP. Erros de conexão também são registrados no log, sem exibir detalhes técnicos aos visitantes. Respostas HTML usam a página `503.php`; requisições AJAX identificadas como `XMLHttpRequest` recebem uma mensagem JSON genérica.
+
+## Formulário de contato
+
+O formulário envia os campos por POST para `enviar.php`, que valida os dados no servidor e rejeita o honeypot. O transporte de e-mail ainda não está configurado: por isso, uma solicitação válida responde com HTTP 503 e o navegador informa que o recebimento está indisponível, sem apresentar sucesso falso. Configure e teste um transporte de e-mail antes de habilitar o recebimento de mensagens.
 
 ### Desenvolvimento local no Ubuntu
 
@@ -108,9 +112,26 @@ Antes de publicar:
 4. Configure o domínio e HTTPS no servidor web e aponte a raiz pública para a pasta do site.
 5. Aplique o esquema inicial apenas em um banco novo. Para um banco já existente, faça backup, compare o esquema e planeje migrações antes de qualquer alteração.
 6. Desative a exibição de erros PHP para visitantes e configure o servidor para registrar detalhes em logs protegidos.
-7. Como o projeto ainda não separa os arquivos públicos do código e da documentação, configure o servidor para bloquear o acesso HTTP a `.git/`, `README.md`, `Checklist.md`, `banco.sql` e `migrations/`. Não publique backups nem arquivos de configuração locais.
+7. Em hospedagem Apache, aplique as diretivas de `apache-error-pages.conf` dentro do VirtualHost do site e recarregue o Apache. Alternativamente, use as diretivas no `.htaccess` se o servidor permitir overrides `FileInfo`. Em outros servidores web, configure as regras equivalentes no servidor.
+8. Como o projeto ainda não separa os arquivos públicos do código e da documentação, configure o servidor para bloquear o acesso HTTP a `.git/`, `README.md`, `Checklist.md`, `banco.sql` e `migrations/`. Não publique backups nem arquivos de configuração locais.
 
 Os passos específicos de publicação variam conforme o provedor. O servidor embutido `php -S` é somente para desenvolvimento local.
+
+### Páginas de erro no Apache local
+
+O VirtualHost local está preparado em `apache-vhost-local.conf` para servir o projeto somente em `127.0.0.1`, usando as diretivas de `apache-error-pages.conf`. Para ativá-lo no Ubuntu:
+
+```bash
+sudo setfacl -m u:www-data:x /home/costa
+sudo install -m 644 apache-vhost-local.conf /etc/apache2/sites-available/barraspace-local.conf
+sudo a2ensite barraspace-local.conf
+sudo apache2ctl configtest
+sudo systemctl reload apache2
+```
+
+O acesso ACL concede ao usuário do Apache apenas a travessia de `/home/costa`, necessária para alcançar o projeto; não concede listagem do diretório pessoal. Se `configtest` falhar, não recarregue o Apache e corrija o erro primeiro. Depois de ativar, valide as respostas 403, 404 e 500 pelo host local `barraspace.test`; para testes HTTP via terminal, use `curl --resolve barraspace.test:80:127.0.0.1`. A configuração ainda precisa ser ativada por uma conta com `sudo`.
+
+Na publicação, configure as mesmas respostas no cPanel da hospedagem UOL e teste cada código HTTP no domínio de produção. O VirtualHost local não altera a hospedagem.
 
 ## Operação e manutenção do banco
 

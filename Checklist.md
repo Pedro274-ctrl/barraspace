@@ -15,19 +15,20 @@ Lista organizada por prioridade e ordem sugerida de execução. Marque cada item
 
 ## 2. Tratamento de erros do site
 
-- [ ] **Criar a página de erro 403** para acessos não autorizados.
-- [ ] **Criar a página de erro 404** para páginas não encontradas.
-- [ ] **Criar a página de erro 500** para erros internos do servidor.
-- [ ] **Configurar o servidor web** para apresentar as páginas de erro correspondentes aos códigos HTTP.
-- [ ] **Padronizar a indisponibilidade do banco de dados.** `conexao.php` já apresenta uma mensagem de manutenção em certas falhas de banco, mas ela está embutida no arquivo. Padronizar essa resposta como erro 503 e usar uma apresentação coerente com as demais páginas de erro.
+- [x] **Criar a página de erro 403** para acessos não autorizados em `403.php` e apresentá-la quando a autorização administrativa for negada em `auth.php`.
+- [x] **Criar a página de erro 404** para páginas não encontradas em `404.php`, com resposta HTTP 404.
+- [x] **Criar a página de erro 500** para erros internos do servidor em `500.php`, com resposta HTTP 500.
+- [ ] **Ativar e validar o VirtualHost Apache local** para as páginas 403, 404 e 500. A configuração está em `apache-vhost-local.conf`; seguir os comandos documentados no `README.md` usando uma conta com `sudo` e testar cada código HTTP.
+- [ ] **Configurar e validar as páginas 403, 404 e 500 na hospedagem de produção da UOL pelo cPanel** ao publicar o site; testar os códigos HTTP no domínio de produção.
+- [x] **Padronizar a indisponibilidade do banco de dados.** `conexao.php` e `conexao.example.php` respondem com HTTP 503; respostas HTML usam `503.php`, enquanto requisições AJAX mantêm resposta JSON sem expor detalhes técnicos.
 
 ## 3. Formulário de contato
 
-- [ ] **Criar `enviar.php`** para receber o formulário de contato. Atualmente o formulário não tem destino definido e o JavaScript simula o envio sem transmitir a mensagem.
-- [ ] **Validar os dados no servidor:** nome, e-mail, assunto, categoria, mensagem e consentimento.
-- [ ] **Tratar o campo honeypot** no endpoint para filtrar envios automatizados.
+- [x] **Criar `enviar.php`** como endpoint POST do formulário. Até configurar o transporte de e-mail, solicitações válidas respondem HTTP 503 sem afirmar que foram enviadas.
+- [x] **Validar no servidor** nome, e-mail, assunto, categoria, mensagem e consentimento.
+- [x] **Tratar o campo honeypot** no endpoint para rejeitar envios automatizados.
 - [ ] **Configurar o envio real** das mensagens para os e-mails da administração.
-- [ ] **Atualizar o JavaScript do formulário** para chamar o endpoint e exibir sucesso somente depois da confirmação de envio; exibir erros quando necessário e permitir nova tentativa.
+- [x] **Atualizar o JavaScript do formulário** para chamar o endpoint, exibir sucesso somente após confirmação e apresentar erros permitindo nova tentativa.
 - [ ] **Testar os cenários do formulário:** envio válido, campos inválidos, consentimento ausente, honeypot preenchido e falha no serviço de envio.
 
 ## 4. Login e acesso
@@ -54,7 +55,23 @@ Lista organizada por prioridade e ordem sugerida de execução. Marque cada item
 - [ ] **Criar uma política de privacidade** explicando como os dados enviados pelo formulário são utilizados.
 - [ ] **Vincular a política ao consentimento** do formulário de contato. Hoje o texto menciona a LGPD, mas não há uma página de privacidade identificada no projeto.
 
-## 7. Testes e validação final
+## 7. Responsividade e compatibilidade
+
+Levantamento inicial: `index.php`, `login.html` e `admin.php` já declaram a meta viewport. `style.css` tem ajustes para telas de até 1024px, 768px e 640px, menu móvel, grades flexíveis e suporte a preferência por movimento reduzido. `admin.css` tem ajustes até 768px, sidebar móvel, filtros em coluna, áreas de toque ampliadas e tabela com rolagem horizontal. Porém, `editar.php` e `novo_condomino.php` não declaram a meta viewport e usam estilos próprios/in-line; não há evidência de testes que confirmem o funcionamento nos navegadores e dispositivos abaixo.
+
+- [ ] **Armazenar as imagens do site no próprio projeto, em uma pasta organizada, em vez de depender de links externos.** Migrar as imagens usadas nas páginas e estilos, atualizar seus caminhos e verificar se carregam corretamente em todos os navegadores.
+- [ ] **Adicionar a meta viewport às páginas `editar.php` e `novo_condomino.php`** e revisar o layout dos formulários para telas estreitas, sem rolagem horizontal indevida.
+- [ ] **Revisar o site público em celular e tablet:** navegação/menu, hero e botões, seções e grades, lista de condôminos, formulário de contato, galeria/lightbox e rodapé.
+- [ ] **Corrigir o menu móvel quando aberto após rolar a página.** Na captura analisada, o painel do menu fica restrito à altura do cabeçalho e os links se sobrepõem ao conteúdo. Investigar a interação entre o `backdrop-filter` do cabeçalho no estado `scrolled` e o posicionamento `fixed` do menu; fazer o menu cobrir corretamente a tela sem interferir na navegação da página.
+- [ ] **Investigar e corrigir o fundo do hero que não carrega no Firefox.** A imagem `PredioTransp1200.jpg` responde no servidor, mas a verificação HTTPS encontrou o certificado de `www.barraspace.com.br` expirado em 01/10/2026. Verificar/renovar o certificado no servidor e confirmar no painel de rede do Firefox que a imagem é carregada sem erro de certificado; validar também no Chrome após limpar ou ignorar cache, sem contornar a validação TLS no site.
+- [ ] **Investigar os travamentos no Firefox com ferramentas de desempenho antes de alterar o JavaScript.** Registrar um perfil reproduzível, identificar tarefas/loops que consumam tempo (incluindo o `requestAnimationFrame` contínuo do cursor em `script.js`) e corrigir somente o que as medições confirmarem; comparar fluidez antes/depois.
+- [ ] **Revisar login e painel administrativo em telas pequenas:** sidebar, cabeçalho, cartões, filtros, ações e formulários; manter a tabela utilizável em celular com rolagem horizontal somente em sua área.
+- [ ] **Validar em iPhone com Safari e em Android com Chrome**, incluindo orientação retrato/paisagem e diferentes larguras de tela.
+- [ ] **Validar também em navegadores desktop atuais:** Chrome, Firefox, Edge e Safari; corrigir incompatibilidades de layout ou interação encontradas.
+- [ ] **Verificar os critérios de uso fluido:** conteúdo sem cortes, sem rolagem horizontal da página, textos legíveis, controles acessíveis por toque e teclado, imagens ajustadas, zoom funcional e respeito à preferência por movimento reduzido.
+- [ ] **Registrar os resultados da matriz de testes** por página, navegador, dispositivo/largura e orientação; repetir a validação após mudanças de CSS ou componentes.
+
+## 8. Testes e validação final
 
 - [ ] **Verificar as páginas de erro** e seus códigos HTTP no servidor.
 - [ ] **Testar instalação inicial e atualização do banco** sem perda de dados.
@@ -68,6 +85,7 @@ Lista organizada por prioridade e ordem sugerida de execução. Marque cada item
 - [x] Site público.
 - [x] Listagem pública de condôminos.
 - [x] Login administrativo.
+- [ ] Responsividade e compatibilidade verificadas nos navegadores e dispositivos previstos.
 - [x] Cadastro, edição e exclusão de condôminos.
 - [x] Filtros e exportação no painel.
 - [ ] O formulário de contato ainda não envia mensagens: no momento, o sucesso é apenas simulado no navegador.

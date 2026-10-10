@@ -11,8 +11,7 @@ function require_privileged_admin(): void
     }
 
     if (!in_array($_SESSION['perfil'] ?? '', ['gerencia', 'operador'], true)) {
-        http_response_code(403);
-        echo 'Acesso não autorizado.';
+        require __DIR__ . '/403.php';
         exit;
     }
 }
