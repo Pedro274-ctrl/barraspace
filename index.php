@@ -164,7 +164,7 @@ $ano_atual = date('Y');
     <header id="header">
         <div class="container header-container">
             <a href="#home" class="logo" aria-label="Barra Space Center - Início">
-                <img src="<?= asset_https('http://www.barraspace.com.br/wp-content/uploads/2016/12/LogoMarcaTransp80.jpg') ?>" alt="Barra Space Center" width="60" height="60" onerror="this.style.display='none'">
+                <img src="imagens/logo11.png" alt="Barra Space Center" width="60" height="60">
                 <span>BARRA SPACE<br><small>CENTER</small></span>
             </a>
             <nav id="menu" aria-label="Menu principal">
@@ -182,7 +182,7 @@ $ano_atual = date('Y');
     </header>
 
     <section id="home" class="hero">
-        <div class="hero-bg" style="background-image: url('<?= asset_https('http://www.barraspace.com.br/wp-content/uploads/2016/12/PredioTransp1200.jpg') ?>');"></div>
+        <div class="hero-bg" style="background-image: url('imagens/hero/1.jpeg');"></div>
         <div class="hero-overlay"></div>
         <div class="container hero-content">
             <div class="eyebrow reveal">Av. das Américas, 1155 • Barra da Tijuca</div>
@@ -648,6 +648,7 @@ $ano_atual = date('Y');
     </footer>
 
     <div id="toast" role="status" aria-live="polite"></div>
+    <script src="cursor.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

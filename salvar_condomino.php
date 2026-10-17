@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_privileged_admin();
+require_authenticated_user();
 
 require_once 'conexao.php';
 

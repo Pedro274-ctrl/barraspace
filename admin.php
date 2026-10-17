@@ -1,13 +1,33 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_privileged_admin();
+require_authenticated_user();
 
 require_once 'conexao.php';
+
+$is_standard_user = $_SESSION['perfil'] === 'usuario';
+if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
+$password_change_message = $_SESSION['password_change_message'] ?? null;
+$password_change_status = $_SESSION['password_change_status'] ?? null;
+$user_creation_message = $_SESSION['user_creation_message'] ?? null;
+$user_creation_status = $_SESSION['user_creation_status'] ?? null;
+unset(
+    $_SESSION['password_change_message'],
+    $_SESSION['password_change_status'],
+    $_SESSION['user_creation_message'],
+    $_SESSION['user_creation_status']
+);
 
 $user_name = trim($_SESSION['nome'] ?? '') ?: $_SESSION['email'];
 $user_name_esc = htmlspecialchars($user_name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $user_initial = htmlspecialchars(strtoupper(substr($user_name, 0, 1)), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-$user_role = $_SESSION['perfil'] === 'operador' ? 'Operador' : 'Gerente';
+$user_role = match ($_SESSION['perfil']) {
+    'operador' => 'Operador',
+    'usuario' => 'Usuário',
+    default => 'Gerente',
+};
 
 // Filtros
 $busca = filter_input(INPUT_GET, 'busca', FILTER_SANITIZE_STRING);
@@ -15,7 +35,27 @@ $filtro_ativo = filter_input(INPUT_GET, 'filtro_ativo', FILTER_SANITIZE_STRING);
 $exportar = filter_input(INPUT_GET, 'export', FILTER_SANITIZE_STRING);
 
 // Variável de controle para manter a aba correta aberta após um filtro
-$is_search = (!empty($busca) || $filtro_ativo !== '') ? true : false;
+$is_search = $is_standard_user || !empty($busca) || $filtro_ativo !== '';
+$is_account = ($_GET['account'] ?? '') === '1';
+$requested_security_section = $_GET['security_section'] ?? 'password';
+$security_section = is_string($requested_security_section)
+    && in_array($requested_security_section, ['password', 'users'], true)
+    ? $requested_security_section
+    : 'password';
+if ($security_section === 'users') {
+    require_user_management_access();
+}
+if ($is_account) {
+    require_privileged_admin();
+}
+if ($is_standard_user && $exportar === 'excel') {
+    require_privileged_admin();
+}
+$accounts = [];
+if ($is_account && $security_section === 'users') {
+    $accountsStatement = $pdo->query('SELECT id, email, nome, perfil, ativo FROM gerencia ORDER BY perfil, nome, email');
+    $accounts = $accountsStatement->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Query de busca segura
 if ($busca) {
@@ -85,6 +125,8 @@ if ($exportar === 'excel') {
 </head>
 <body>
 
+    <div class="cursor-dot" aria-hidden="true"></div>
+    <div class="cursor-outline" aria-hidden="true"></div>
     <div class="admin-wrapper">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-logo">
@@ -92,11 +134,16 @@ if ($exportar === 'excel') {
             </div>
             <ul class="sidebar-menu">
                 <!-- Classes 'active' e 'menu-link' com data-target controlam a navegação no JS -->
-                <li><a href="#" class="menu-link <?= !$is_search ? 'active' : '' ?>" data-target="view-dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+                <?php if ($is_standard_user): ?>
+                <li><a href="#" class="menu-link active" data-target="view-condominos"><i class="fas fa-users"></i> Gestão de Condôminos</a></li>
+                <?php else: ?>
+                <li><a href="#" class="menu-link <?= !$is_search && !$is_account ? 'active' : '' ?>" data-target="view-dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
                 <li><a href="#" class="menu-link <?= $is_search ? 'active' : '' ?>" data-target="view-condominos"><i class="fas fa-users"></i> Gestão de Condôminos</a></li>
+                <li><a href="#" class="menu-link <?= $is_account ? 'active' : '' ?>" data-target="view-account"><i class="fas fa-key"></i> Segurança</a></li>
                 <li><a href="#"><i class="fas fa-handshake"></i> Centro de Convenções</a></li>
                 <li><a href="#"><i class="fas fa-bullhorn"></i> Comunicados</a></li>
                 <li><a href="#"><i class="fas fa-file-invoice-dollar"></i> Financeiro (Boletos)</a></li>
+                <?php endif; ?>
             </ul>
         </aside>
 
@@ -122,9 +169,9 @@ if ($exportar === 'excel') {
             </header>
 
             <div class="dashboard-content">
-                
+                <?php if (!$is_standard_user): ?>
                 <!-- VISTA 1: DASHBOARD (Visão Geral) -->
-                <div id="view-dashboard" class="view-section <?= $is_search ? 'hidden' : '' ?>">
+                <div id="view-dashboard" class="view-section <?= $is_search || $is_account ? 'hidden' : '' ?>">
                     <div class="header-title fade-in">
                         <h1>Visão Geral do Complexo</h1>
                         <p>Acompanhe os indicadores em tempo real.</p>
@@ -154,9 +201,10 @@ if ($exportar === 'excel') {
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- VISTA 2: GESTÃO DE CONDÔMINOS (Tabela) -->
-                <div id="view-condominos" class="view-section <?= $is_search ? '' : 'hidden' ?>">
+                <div id="view-condominos" class="view-section <?= $is_search && !$is_account ? '' : 'hidden' ?>">
                     <div class="table-container fade-in-up">
                         <div class="table-header">
                             <h2>Gestão de Condôminos</h2>
@@ -255,10 +303,126 @@ if ($exportar === 'excel') {
                     </div>
                 </div>
 
+                <?php if (!$is_standard_user): ?>
+                <div id="view-account" class="view-section <?= $is_account ? '' : 'hidden' ?>">
+                    <div class="security-layout">
+                        <nav class="security-navigation" aria-label="Opções de segurança">
+                            <a href="admin.php?account=1&amp;security_section=password" class="<?= $security_section === 'password' ? 'active' : '' ?>" <?= $security_section === 'password' ? 'aria-current="page"' : '' ?>>
+                                <i class="fas fa-key" aria-hidden="true"></i> Redefinir senha
+                            </a>
+                            <a href="admin.php?account=1&amp;security_section=users" class="<?= $security_section === 'users' ? 'active' : '' ?>" <?= $security_section === 'users' ? 'aria-current="page"' : '' ?>>
+                                <i class="fas fa-users" aria-hidden="true"></i> Usuários
+                            </a>
+                        </nav>
+
+                        <?php if ($security_section === 'password'): ?>
+                        <section class="table-container password-settings" aria-labelledby="security-section-title">
+                            <div class="table-header">
+                                <h2 id="security-section-title">Redefinir senha</h2>
+                                <p>Altere a senha da sua conta autenticada. A alteração está disponível para gerentes e operadores.</p>
+                            </div>
+
+                            <?php if (is_string($password_change_message)): ?>
+                                <p class="password-feedback <?= $password_change_status === 'success' ? 'success' : 'error' ?>" role="status">
+                                    <?= htmlspecialchars($password_change_message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
+                                </p>
+                            <?php endif; ?>
+
+                            <form action="alterar_senha.php" method="POST" class="password-form">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
+                                <div class="password-field">
+                                    <label for="current_password">Senha atual</label>
+                                    <input class="lux-input" type="password" id="current_password" name="current_password" autocomplete="current-password" required>
+                                </div>
+                                <div class="password-field">
+                                    <label for="new_password">Nova senha (12 a 72 bytes)</label>
+                                    <input class="lux-input" type="password" id="new_password" name="new_password" autocomplete="new-password" minlength="12" maxlength="72" required>
+                                </div>
+                                <div class="password-field">
+                                    <label for="confirm_password">Confirme a nova senha</label>
+                                    <input class="lux-input" type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" minlength="12" maxlength="72" required>
+                                </div>
+                                <button type="submit" class="btn lux-btn-primary">Atualizar senha</button>
+                            </form>
+                        </section>
+                        <?php else: ?>
+                        <section class="table-container security-users-placeholder" aria-labelledby="security-section-title">
+                            <h2 id="security-section-title">Usuários</h2>
+                            <p>Cadastre uma conta de acesso para um funcionário. A conta criada poderá gerenciar condôminos, mas não terá acesso à Segurança.</p>
+                            <?php if (is_string($user_creation_message)): ?>
+                                <p class="password-feedback <?= $user_creation_status === 'success' ? 'success' : 'error' ?>" role="status">
+                                    <?= htmlspecialchars($user_creation_message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
+                                </p>
+                            <?php endif; ?>
+                            <form action="criar_usuario.php" method="POST" class="password-form">
+                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
+                                <div class="password-field">
+                                    <label for="new_user_name">Nome do funcionário</label>
+                                    <input class="lux-input" type="text" id="new_user_name" name="nome" maxlength="100" autocomplete="name" required>
+                                </div>
+                                <div class="password-field">
+                                    <label for="new_user_email">E-mail de login</label>
+                                    <input class="lux-input" type="email" id="new_user_email" name="email" maxlength="100" autocomplete="email" required>
+                                </div>
+                                <div class="password-field">
+                                    <label for="new_user_password">Senha inicial (12 a 72 bytes)</label>
+                                    <input class="lux-input" type="password" id="new_user_password" name="senha" minlength="12" maxlength="72" autocomplete="new-password" required>
+                                </div>
+                                <div class="password-field">
+                                    <label for="new_user_password_confirmation">Confirme a senha</label>
+                                    <input class="lux-input" type="password" id="new_user_password_confirmation" name="confirmacao_senha" minlength="12" maxlength="72" autocomplete="new-password" required>
+                                </div>
+                                <button type="submit" class="btn lux-btn-primary">Cadastrar usuário</button>
+                            </form>
+                            <div class="table-responsive users-table-wrap">
+                                <table class="admin-table users-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Login</th>
+                                            <th>Nome</th>
+                                            <th>E-mail</th>
+                                            <th>Ativo</th>
+                                            <th>Privilégio de administrador</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($accounts as $account): ?>
+                                            <?php
+                                            $accountLogin = match ($account['perfil']) {
+                                                'gerencia' => 'admin',
+                                                'operador' => 'operador',
+                                                default => $account['email'],
+                                            };
+                                            $accountName = trim((string) $account['nome']) ?: $accountLogin;
+                                            $hasAdminPrivilege = in_array($account['perfil'], ['gerencia', 'operador'], true);
+                                            ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($accountLogin, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+                                                <td><?= htmlspecialchars($accountName, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+                                                <td><?= htmlspecialchars($account['email'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></td>
+                                                <td><?= (int) $account['ativo'] === 1 ? 'Sim' : 'Não' ?></td>
+                                                <td><?= $hasAdminPrivilege ? 'Sim' : 'Não' ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        <?php if ($accounts === []): ?>
+                                            <tr>
+                                                <td colspan="5" class="empty-state">Nenhuma conta cadastrada.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
             </div>
         </main>
     </div>
 
+    <script src="cursor.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>

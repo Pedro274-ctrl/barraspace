@@ -49,7 +49,7 @@ h1,h2,h3,h4{font-family:'Cormorant Garamond',serif; font-weight:600; line-height
 .cursor-dot{width:6px; height:6px; background:white; transform:translate(-50%,-50%)}
 .cursor-outline{width:32px; height:32px; border:1px solid rgba(255,255,255,.6); transform:translate(-50%,-50%); transition:width .3s var(--ease-out), height .3s var(--ease-out), background .3s, border-color .3s}
 body.hovering .cursor-outline{width:64px; height:64px; background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.9)}
-@media(pointer:coarse){.cursor-dot,.cursor-outline{display:none !important}}
+@media(pointer:coarse),(prefers-reduced-motion:reduce){.cursor-dot,.cursor-outline{display:none !important}}
 
 /* Header */
 #header{position:fixed; top:0; width:100%; z-index:1000; padding:18px 0; transition:all .6s var(--ease-out); border-bottom:1px solid transparent}

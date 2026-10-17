@@ -106,38 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- CURSOR CUSTOM - CORRIGIDO PERFORMANCE [Antes criava animate infinito] ---
-  if (window.matchMedia('(pointer: fine)').matches && !prefersReducedMotion) {
-    const dot = $('.cursor-dot');
-    const outline = $('.cursor-outline');
-    if (dot && outline) {
-      let mouseX = 0, mouseY = 0;
-      let outlineX = 0, outlineY = 0;
-      
-      window.addEventListener('mousemove', e => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        dot.style.left = mouseX + 'px';
-        dot.style.top = mouseY + 'px';
-      }, { passive: true });
-
-      // Animação suave do outline com lerp em vez de .animate() infinito
-      const animateOutline = () => {
-        outlineX += (mouseX - outlineX) * 0.15;
-        outlineY += (mouseY - outlineY) * 0.15;
-        outline.style.left = outlineX + 'px';
-        outline.style.top = outlineY + 'px';
-        requestAnimationFrame(animateOutline);
-      };
-      animateOutline();
-
-      $$('a, button, .bento-card, .condomino-box').forEach(el => {
-        el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
-        el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
-      });
-    }
-  }
-
   // --- HERO PARALLAX COM GUARD + reduced-motion ---
   const hero = $('.hero');
   const heroBg = $('.hero-bg');

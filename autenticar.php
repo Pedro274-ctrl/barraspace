@@ -9,11 +9,11 @@ if (!$email || !$senha) {
     die("<script>alert('Preencha e-mail e senha'); window.location='login.html';</script>");
 }
 
-$stmt = $pdo->prepare("SELECT id, email, senha, nome, perfil FROM gerencia WHERE email = ?");
+$stmt = $pdo->prepare("SELECT id, email, senha, nome, perfil FROM gerencia WHERE email = ? AND ativo = 1");
 $stmt->execute([$email]);
 $usuario = $stmt->fetch();
 
-if ($usuario && in_array($usuario['perfil'], ['gerencia', 'operador'], true) && password_verify($senha, $usuario['senha'])) {
+if ($usuario && in_array($usuario['perfil'], ['gerencia', 'operador', 'usuario'], true) && password_verify($senha, $usuario['senha'])) {
     session_regenerate_id(true);
     $_SESSION['logado'] = true;
     $_SESSION['email'] = $usuario['email'];

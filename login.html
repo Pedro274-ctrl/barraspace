@@ -8,35 +8,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body class="login-bg">
+    <div class="cursor-dot" aria-hidden="true"></div>
+    <div class="cursor-outline" aria-hidden="true"></div>
     <div class="login-container">
         <div class="login-box">
             <div class="login-logo">
-                <img src="http://www.barraspace.com.br/wp-content/uploads/2016/12/LogoMarcaTransp80.jpg" alt="Logo Barra Space Center">
+                <img src="imagens/logo1.png" alt="Logo Barra Space Center">
             </div>
-            <h2>Área Restrita</h2>
             <p>Faça login para acessar o painel</p>
             <form action="autenticar.php" method="POST">
                 <div class="form-group">
-                    <label for="perfil">Perfil de Acesso</label>
-                    <select id="perfil" name="perfil">
-                        <option value="admin">Administração / Gerência</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="email">E-mail ou CPF</label>
-                    <input type="text" id="email" name="email" required placeholder="Digite seu e-mail ou CPF">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="Digite seu e-mail">
                 </div>
                 <div class="form-group">
                     <label for="senha">Senha</label>
                     <input type="password" id="senha" name="senha" required placeholder="Digite sua senha">
                 </div>
-                <button type="submit" class="btn-login-submit">Entrar no Sistema</button>
+                <button type="submit" class="btn-login-submit">Entrar</button>
                 <div class="login-links">
-                    <a href="#">Esqueci minha senha</a>
                     <a href="index.php">← Voltar ao Site</a>
                 </div>
             </form>
         </div>
     </div>
+    <script src="cursor.js"></script>
 </body>
 </html>

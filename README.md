@@ -1,11 +1,13 @@
 # Barra Space Center
 
-Site em PHP com banco de dados MySQL. O projeto não usa Composer nem dependências JavaScript instaladas via npm. Ainda não há uma versão mínima de PHP formalmente definida; use uma versão suportada pelo provedor e valide o projeto nesse ambiente antes da publicação.
+Site em PHP com banco de dados MySQL. O projeto usa Composer para carregar a biblioteca PHPMailer no envio SMTP e não tem dependências JavaScript instaladas via npm. Ainda não há uma versão mínima de PHP formalmente definida; use uma versão suportada pelo provedor e valide o projeto nesse ambiente antes da publicação.
 
 ## Requisitos
 
 - PHP CLI para desenvolvimento local ou PHP integrado ao servidor web na hospedagem.
 - Extensão PHP PDO MySQL (`pdo_mysql`).
+- Extensões PHP OpenSSL (`openssl`) e Multibyte String (`mbstring`) para envio SMTP seguro e mensagens UTF-8.
+- Composer para instalar as dependências PHP.
 - MySQL ou MariaDB compatível com o esquema em `banco.sql`.
 - Git, caso esteja clonando o repositório.
 
@@ -45,9 +47,34 @@ cp conexao.example.php conexao.php
 
 `DB_USER` e `DB_PASS` não têm valores padrão. Se estiverem ausentes ou vazias, o site responde com HTTP 503 e registra a configuração ausente no log do PHP. Erros de conexão também são registrados no log, sem exibir detalhes técnicos aos visitantes. Respostas HTML usam a página `503.php`; requisições AJAX identificadas como `XMLHttpRequest` recebem uma mensagem JSON genérica.
 
+## Dependências PHP
+
+Instale as dependências bloqueadas no `composer.lock` na raiz do projeto:
+
+```bash
+composer install --no-dev --prefer-dist --optimize-autoloader
+```
+
+Mantenha `composer.json` e `composer.lock` no deploy. Se o Composer não estiver disponível na hospedagem, execute a instalação em ambiente compatível e publique também a pasta `vendor/`.
+
 ## Formulário de contato
 
-O formulário envia os campos por POST para `enviar.php`, que valida os dados no servidor e rejeita o honeypot. O transporte de e-mail ainda não está configurado: por isso, uma solicitação válida responde com HTTP 503 e o navegador informa que o recebimento está indisponível, sem apresentar sucesso falso. Configure e teste um transporte de e-mail antes de habilitar o recebimento de mensagens.
+O formulário envia os campos por POST para `enviar.php`, que valida os dados no servidor, rejeita o honeypot e envia a mensagem por SMTP autenticado usando PHPMailer. O endereço do visitante é usado somente como `Reply-To`; o remetente precisa ser autorizado pelo provedor SMTP.
+
+Configure estas variáveis no ambiente do PHP. As credenciais devem ser guardadas na configuração privada da hospedagem, nunca no código ou no Git:
+
+| Variável | Obrigatória | Padrão | Descrição |
+| --- | --- | --- | --- |
+| `SMTP_HOST` | Sim | — | Host SMTP do provedor |
+| `SMTP_PORT` | Não | `587` | Porta SMTP (normalmente 587 para STARTTLS ou 465 para SMTPS) |
+| `SMTP_ENCRYPTION` | Não | `starttls` | Criptografia: `starttls` ou `smtps` |
+| `SMTP_USERNAME` | Sim | — | Usuário de autenticação SMTP |
+| `SMTP_PASSWORD` | Sim | — | Senha ou senha de aplicativo SMTP |
+| `SMTP_FROM` | Sim | — | Endereço remetente autorizado pelo provedor |
+| `SMTP_FROM_NAME` | Não | `Barra Space Center` | Nome exibido como remetente |
+| `CONTACT_TO` | Não | `pedro274.phh@gmail.com` | Destinatários, separados por vírgula; o padrão é para teste |
+
+O endpoint responde sucesso somente após o servidor SMTP aceitar a mensagem. Se a configuração estiver ausente ou o envio falhar, responde HTTP 503, apresenta uma mensagem genérica ao visitante e registra o erro técnico no log do PHP. Antes da produção, configure `CONTACT_TO` com os e-mails da administração e teste a entrega real, incluindo a pasta de spam.
 
 ### Desenvolvimento local no Ubuntu
 
@@ -69,7 +96,16 @@ sudo mysql < banco.sql
 
    A migração marca como gerente a conta existente `gerencia@barraspace.com.br` e atribui `usuario` às demais contas. Confira o histórico e a estrutura antes de executar; detalhes em [`migrations/README.md`](migrations/README.md). **No banco local deste projeto, a migração 001 já foi aplicada; não execute esses comandos novamente nesse banco.**
 
-4. Crie um usuário MySQL próprio para a aplicação. Em um terminal MySQL administrativo (`sudo mysql`), substitua o exemplo de senha por uma senha local forte e execute:
+4. Adicione o estado ativo às contas com a migração 002. Faça backup e confira `schema_migrations` antes de aplicar:
+
+   ```bash
+   sudo mysql barraspace < migrations/002_ativar_contas_gerencia.sql
+   sudo mysql barraspace -e "INSERT INTO schema_migrations (version, description) VALUES ('002', 'Adiciona estado ativo às contas')"
+   ```
+
+   A migração mantém as contas existentes ativas. É necessária para o login e a listagem de usuários.
+
+5. Crie um usuário MySQL próprio para a aplicação. Em um terminal MySQL administrativo (`sudo mysql`), substitua o exemplo de senha por uma senha local forte e execute:
 
 ```sql
 CREATE USER 'barraspace_local'@'localhost' IDENTIFIED BY 'senha_aqui';
@@ -78,7 +114,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON barraspace.* TO 'barraspace_local'@'loca
 
 Não reutilize essa senha em outros serviços nem a salve em arquivos versionados. Se o usuário já existir, ajuste-o em vez de repetir `CREATE USER`.
 
-5. Copie o modelo de conexão para o arquivo local carregado pela aplicação:
+6. Copie o modelo de conexão para o arquivo local carregado pela aplicação:
 
 ```bash
 cp conexao.example.php conexao.php
@@ -86,19 +122,19 @@ cp conexao.example.php conexao.php
 
 `conexao.php` é ignorado pelo Git; não o force para o repositório. O modelo versionado não contém credenciais.
 
-6. Inicie o site na mesma sessão de terminal. O comando pede a senha sem exibi-la e inicia o servidor de desenvolvimento do PHP:
+7. Inicie o site na mesma sessão de terminal. O comando pede a senha sem exibi-la e inicia o servidor de desenvolvimento do PHP:
 
 ```bash
-export DB_HOST=localhost
+export DB_HOST=127.0.0.1
 export DB_NAME=barraspace
-export DB_USER=barraspace_local
-read -rsp "senha_aqui:" DB_PASS
+export DB_USER=barraspace
+read -rsp "Senha do banco: " DB_PASS
 echo
 export DB_PASS
 php -S 127.0.0.1:8000
 ```
 
-7. Acesse `http://127.0.0.1:8000`. Pare o servidor com `Ctrl+C`.
+8. Acesse `http://127.0.0.1:8000`. Pare o servidor com `Ctrl+C`.
 
 As variáveis definidas no terminal valem apenas para aquela sessão. Ao abrir outro terminal, defina-as novamente. Não use o servidor embutido do PHP para produção.
 
@@ -107,13 +143,14 @@ As variáveis definidas no terminal valem apenas para aquela sessão. Ao abrir o
 Antes de publicar:
 
 1. Configure um servidor web com PHP e a extensão PDO MySQL habilitados.
-2. Crie um banco e um usuário exclusivos para a aplicação na hospedagem. Conceda apenas os privilégios necessários sobre esse banco.
-3. Configure `DB_USER` e `DB_PASS` como variáveis de ambiente do processo PHP. Configure também `DB_HOST` e `DB_NAME` se forem diferentes dos padrões. Não salve credenciais no código, no GitHub ou em arquivos acessíveis publicamente.
-4. Configure o domínio e HTTPS no servidor web e aponte a raiz pública para a pasta do site.
-5. Aplique o esquema inicial apenas em um banco novo. Para um banco já existente, faça backup, compare o esquema e planeje migrações antes de qualquer alteração.
-6. Desative a exibição de erros PHP para visitantes e configure o servidor para registrar detalhes em logs protegidos.
-7. Em hospedagem Apache, aplique as diretivas de `apache-error-pages.conf` dentro do VirtualHost do site e recarregue o Apache. Alternativamente, use as diretivas no `.htaccess` se o servidor permitir overrides `FileInfo`. Em outros servidores web, configure as regras equivalentes no servidor.
-8. Como o projeto ainda não separa os arquivos públicos do código e da documentação, configure o servidor para bloquear o acesso HTTP a `.git/`, `README.md`, `Checklist.md`, `banco.sql` e `migrations/`. Não publique backups nem arquivos de configuração locais.
+2. Instale as dependências PHP com `composer install --no-dev --prefer-dist --optimize-autoloader` ou publique a pasta `vendor/` gerada por esse comando.
+3. Crie um banco e um usuário exclusivos para a aplicação na hospedagem. Conceda apenas os privilégios necessários sobre esse banco.
+4. Configure `DB_USER`, `DB_PASS`, `SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD` e `SMTP_FROM` como variáveis privadas do ambiente PHP. Configure `DB_HOST`, `DB_NAME`, `SMTP_PORT`, `SMTP_ENCRYPTION` e `CONTACT_TO` conforme necessário. Para ativar o recebimento real na produção, substitua o destinatário de teste pelo e-mail da administração. Não salve credenciais no código, no GitHub ou em arquivos acessíveis publicamente.
+5. Configure o domínio e HTTPS no servidor web e aponte a raiz pública para a pasta do site.
+6. Aplique o esquema inicial apenas em um banco novo. Para um banco já existente, faça backup, compare o esquema e planeje migrações antes de qualquer alteração.
+7. Desative a exibição de erros PHP para visitantes e configure o servidor para registrar detalhes em logs protegidos.
+8. Em hospedagem Apache, aplique as diretivas de `apache-error-pages.conf` dentro do VirtualHost do site e recarregue o Apache. Alternativamente, use as diretivas no `.htaccess` se o servidor permitir overrides `FileInfo`. Em outros servidores web, configure as regras equivalentes no servidor.
+9. Como o projeto ainda não separa os arquivos públicos do código e da documentação, configure o servidor para bloquear o acesso HTTP a `.git/`, `README.md`, `Checklist.md`, `banco.sql` e `migrations/`. Não publique backups nem arquivos de configuração locais.
 
 Os passos específicos de publicação variam conforme o provedor. O servidor embutido `php -S` é somente para desenvolvimento local.
 
@@ -186,7 +223,9 @@ Depois de criar a conta de gerência, crie a conta de suporte `operador`:
 php criar_operador.php
 ```
 
-O utilitário pede um e-mail para login e uma senha exclusiva duas vezes, sem exibi-la; o nome exibido será `Operador`. Ele cria no máximo uma conta com o perfil `operador`, que tem os mesmos privilégios administrativos da gerência. A senha é armazenada com `password_hash()` e não é salva no código. Execute o script somente em terminal interativo com as variáveis `DB_*` configuradas. O painel e as operações administrativas aceitam apenas contas com perfil `gerencia` ou `operador`.
+O utilitário pede um e-mail para login e uma senha exclusiva duas vezes, sem exibi-la; o nome exibido será `Operador`. Ele cria no máximo uma conta com o perfil `operador`, que tem os mesmos privilégios administrativos da gerência. A senha é armazenada com `password_hash()` e não é salva no código. Execute o script somente em terminal interativo com as variáveis `DB_*` configuradas.
+
+Gerentes e operadores também podem cadastrar funcionários na opção “Segurança” > “Usuários”. Essas contas recebem o perfil `usuario`, podem entrar no painel e têm acesso somente à gestão de condôminos (cadastro, edição e exclusão); não podem acessar Segurança nem criar outras contas. A criação exige token CSRF e armazena a senha com `password_hash()`.
 
 No banco local deste projeto, a conta `operador` já foi criada. Não execute o utilitário novamente nesse banco; ele recusará uma segunda conta operador.
 
